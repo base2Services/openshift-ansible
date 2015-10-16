@@ -4,35 +4,35 @@ masters
 nodes
 etcd
 
-# Set variables common for all OSEv3 hosts
+# # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
-# SSH user, this user should allow ssh based auth without requiring a password
+# # SSH user, this user should allow ssh based auth without requiring a password
 ansible_ssh_user=base2
-
-# If ansible_ssh_user is not root, ansible_sudo must be set to true
+osm_default_subdomain=int.prod.openshift.aws.base2.services
+#
+#
+# # If ansible_ssh_user is not root, ansible_sudo must be set to true
 ansible_sudo=true
-
+#
 product_type=openshift
 deployment_type=enterprise
-
-# uncomment the following to enable htpasswd authentication; defaults to DenyAllPasswordIdentityProvider
+#
+# # uncomment the following to enable htpasswd authentication; defaults to DenyAllPasswordIdentityProvider
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/openshift/openshift-passwd'}]
-
-# host group for masters
+#
+# # host group for masters
 [masters]
-master.int.prod.openshift.aws.base2.services
-infranode.int.prod.openshift.aws.base2.services
-
-# host group for etcd
+os3mastera.int.prod.openshift.aws.base2.services openshift_hostname=os3mastera.int.prod.openshift.aws.base2.services openshift_public_hostname=os3master.prod.openshift.aws.base2.services
+#
+# # host group for etcd
 [etcd]
-etcd1.int.prod.openshift.aws.base2.services
-etcd2.int.prod.openshift.aws.base2.services
-etcd3.int.prod.openshift.aws.base2.services
+etcd1.int.prod.openshift.aws.base2.services openshift_hostname=etcd1.int.prod.openshift.aws.base2.services
+etcd2.int.prod.openshift.aws.base2.services openshift_hostname=etcd2.int.prod.openshift.aws.base2.services
+etcd3.int.prod.openshift.aws.base2.services openshift_hostname=etcd3.int.prod.openshift.aws.base2.services
 
-# host group for nodes, includes region info
+# # host group for nodes, includes region info
 [nodes]
-master.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
-infranode0.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'primary', 'zone': 'syd1'}"
-node0.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'primary', 'zone': 'syd1'}"
-node1.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'primary', 'zone': 'syd2'}"
-
+#os3mastera.int.prod.openshift.aws.base2.services openshift_hostname=os3mastera.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
+infranodea.int.prod.openshift.aws.base2.services openshift_hostname=infranodea.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'infra', 'zone': 'default}"
+nodea.int.prod.openshift.aws.base2.services openshift_hostname=nodea.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'primary', 'zone': 'syda'}"
+nodeb.int.prod.openshift.aws.base2.services openshift_hostname=nodeb.int.prod.openshift.aws.base2.services openshift_node_labels="{'region': 'primary', 'zone': 'sydb'}"
