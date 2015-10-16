@@ -2,6 +2,8 @@
 - hosts: all
   vars:
     openshift_deployment_type: "{{ deployment_type }}"
+  vars_files:
+    -  base2_credentials.yml
   roles:
   - role: rhel_subscribe
     when: deployment_type in ['atomic-enterprise', 'enterprise', 'openshift-enterprise'] and
