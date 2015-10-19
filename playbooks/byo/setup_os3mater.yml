@@ -1,0 +1,17 @@
+---
+- hosts: os3master
+  vars:
+    key_file: /home/base2/.ssh/id_rsa
+    ssh_key: "{{ os3master_key }}"
+  vars_files:
+    -  base2_credentials.yml
+
+- name: Install ssh key
+  copy: 
+    content: "{{ ssh_key }}" 
+    dest: "{{ key_file }}"
+    mode: 0600
+    owner: base2 
+
+
+
