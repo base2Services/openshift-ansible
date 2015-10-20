@@ -38,3 +38,12 @@
     dest: "{{ key_file }}"
     mode: 0600
     owner: base2 
+  tasks:
+    - name: Install ssh key
+      copy: 
+        content: "{{ ssh_key }}" 
+        dest: "{{ key_file }}"
+        mode: 0600
+        owner: base2 
+
+
