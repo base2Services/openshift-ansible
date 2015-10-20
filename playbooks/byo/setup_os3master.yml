@@ -4,7 +4,7 @@
     key_file: /home/base2/.ssh/id_rsa
     ssh_key: "{{ os3master_key }}"
   vars_files:
-    -  base2_credentials.yml
+    -  prod_os3master_rsa.yml
 
   tasks:
     - name: Install ssh key
