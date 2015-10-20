@@ -4,11 +4,18 @@
   tasks:
   - name: Install Docker
     yum: pkg=docker state=present 
+
   - name: stop docker service 
     service: name=docker state=stopped 
+
   - name: remove default docker files
     shell: rm -rf /var/lib/docker/*
+
+  - name: update docker sysconfig
+    replace: dest=/etc/sysconfig/docker regularexp="^OPTIONS='--selinux-enabled'$" replace="^OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0/16'$"
+
   - name: start docker service 
     service: name=docker state=started
+
   - name: docker storage setup 
     shell: docker-storage-setup
