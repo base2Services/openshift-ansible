@@ -14,5 +14,14 @@
         mode: 0600
         owner: base2 
 
+    - name: create openshift dir
+      file:
+        path: /etc/openshift
+        state: directory
 
+    - name: Install openshift-htpasswd
+      copy:
+        content: "{{ os3_htpasswd }}"
+        dest: /etc/openshift/openshift-passwd"
+        mode: 0440        
 
