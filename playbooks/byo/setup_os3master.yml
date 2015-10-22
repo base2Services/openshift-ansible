@@ -27,7 +27,7 @@
       copy:
         content: "{{ os3_htpasswd }}"
         dest: /etc/openshift/openshift-passwd"
-        mode: 0664        
+        mode: 0440        
 
     - selinux: policy=targeted state=permissive
     -  base2_credentials.yml
@@ -45,5 +45,3 @@
         dest: "{{ key_file }}"
         mode: 0600
         owner: base2 
-
-
