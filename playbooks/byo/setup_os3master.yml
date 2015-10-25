@@ -23,5 +23,5 @@
       copy:
         content: "{{ os3_htpasswd }}"
         dest: /etc/openshift/openshift-passwd"
-        mode: 0440        
+        mode: 0664        
 
