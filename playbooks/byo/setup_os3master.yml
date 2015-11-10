@@ -5,7 +5,7 @@
     ssh_key: "{{ os3master_key }}"
   vars_files:
     -  prod_os3master_rsa.yml
-    -  prod_os3master_rsa.yml
+    -  base2_credentials.yml
 
   tasks:
     - name: Install ssh key
