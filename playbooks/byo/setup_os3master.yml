@@ -5,23 +5,28 @@
     ssh_key: "{{ os3master_key }}"
   vars_files:
     -  prod_os3master_rsa.yml
+    -  prod_os3master_rsa.yml
 
   tasks:
     - name: Install ssh key
+      tags: os3-setup
       copy: 
         content: "{{ ssh_key }}" 
         dest: "{{ key_file }}"
         mode: 0600
         owner: base2 
-
+      
     - name: create openshift dir
+      tags: os3-setup
       file:
         path: /etc/openshift
         state: directory
 
     - name: Install openshift-htpasswd
+      tags: os3-setup
       copy:
         content: "{{ os3_htpasswd }}"
         dest: /etc/openshift/openshift-passwd"
         mode: 0664        
+
 
