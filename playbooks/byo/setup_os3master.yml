@@ -6,6 +6,7 @@
   vars_files:
     -  prod_os3master_rsa.yml
     -  base2_credentials.yml
+    -  prod_os3master_rsa.yml
 
   tasks:
     - name: Install ssh key
