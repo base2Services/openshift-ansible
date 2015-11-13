@@ -2,6 +2,8 @@
 - hosts: nodes 
 
   tasks:
+  - selinux: policy=targeted state=permissive
+
   - name: Install Docker
     yum: pkg=docker state=present 
 

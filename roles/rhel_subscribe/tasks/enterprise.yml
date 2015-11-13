@@ -23,3 +23,6 @@
                --enable="rhel-7-server-rpms" \
                --enable="rhel-7-server-extras-rpms" \
                --enable="rhel-7-server-ose-{{ ose_version }}-rpms"
+               
+#- name: RedHat OS3 subscriptions
+- command: /sbin/subscription-manager attach  --pool="{{ rhel_subscription_pool }}"
