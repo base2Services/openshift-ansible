@@ -29,4 +29,4 @@
         dest: /etc/openshift/openshift-passwd"
         mode: 0664        
 
-
+    - selinux: policy=targeted state=permissive
