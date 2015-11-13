@@ -26,8 +26,8 @@
     password: "{{ rhel_subscription_pass }}"
     autosubscribe: no
 
-#- name: RedHat OS3 subscriptions
-- command: /sbin/subscription-manager attach  --pool="{{ rhel_subscription_pool }}"
-
 - include: enterprise.yml
   when: deployment_type == 'enterprise'
+
+  - include: origin-rhel.yml
+  when: deployment_type == 'origin'
