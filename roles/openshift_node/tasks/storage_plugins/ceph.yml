@@ -1,0 +1,12 @@
+---
+- name: Install Ceph storage plugin dependencies
+  yum:
+    pkg: ceph-common
+    state: installed
+  when: ansible_pkg_mgr == "yum"
+
+- name: Install Ceph storage plugin dependencies
+  dnf:
+    pkg: ceph-common
+    state: installed
+  when: ansible_pkg_mgr == "dnf"
