@@ -29,5 +29,5 @@
 - include: enterprise.yml
   when: deployment_type == 'enterprise'
 
-  - include: origin-rhel.yml
+- include: origin-rhel.yml
   when: deployment_type == 'origin'
