@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  sudo: yes
+
+  tasks:
+    - name: CCreate AWS backed PV for Docker Registry
+      template: src=aws-pv.j2 dest=/opt/base2/{{ pv_name }}aws-pv.yml
