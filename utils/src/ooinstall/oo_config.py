@@ -14,7 +14,8 @@ PERSIST_SETTINGS = [
     'variant_version',
     'version',
     ]
-REQUIRED_FACTS = ['ip', 'public_ip', 'hostname', 'public_hostname']
+DEFAULT_REQUIRED_FACTS = ['ip', 'public_ip', 'hostname', 'public_hostname']
+PRECONFIGURED_REQUIRED_FACTS = ['hostname', 'public_hostname']
 
 
 class OOConfigFileError(Exception):
@@ -37,6 +38,7 @@ class Host(object):
         self.public_hostname = kwargs.get('public_hostname', None)
         self.connect_to = kwargs.get('connect_to', None)
         self.preconfigured = kwargs.get('preconfigured', None)
+        self.new_host = kwargs.get('new_host', None)
 
         # Should this host run as an OpenShift master:
         self.master = kwargs.get('master', False)
@@ -67,7 +69,8 @@ class Host(object):
         """ Used when exporting to yaml. """
         d = {}
         for prop in ['ip', 'hostname', 'public_ip', 'public_hostname',
-                     'master', 'node', 'master_lb', 'containerized', 'connect_to', 'preconfigured']:
+                     'master', 'node', 'master_lb', 'containerized',
+                     'connect_to', 'preconfigured', 'new_host']:
             # If the property is defined (not None or False), export it:
             if getattr(self, prop):
                 d[prop] = getattr(self, prop)
@@ -208,7 +211,12 @@ class OOConfig(object):
 
         for host in self.hosts:
             missing_facts = []
-            for required_fact in REQUIRED_FACTS:
+            if host.preconfigured:
+                required_facts = PRECONFIGURED_REQUIRED_FACTS
+            else:
+                required_facts = DEFAULT_REQUIRED_FACTS
+
+            for required_fact in required_facts:
                 if not getattr(host, required_fact):
                     missing_facts.append(required_fact)
             if len(missing_facts) > 0:

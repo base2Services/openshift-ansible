@@ -15,7 +15,7 @@
   * There is currently a known issue with ansible-1.9.0, you can downgrade to 1.8.4 on Fedora by installing one of the builds from Koji: http://koji.fedoraproject.org/koji/packageinfo?packageID=13842
   * Available in Fedora channels
   * Available for EL with EPEL and Optional channel
-* One or more RHEL 7.1 or CentOS 7.1 VMs
+* One or more RHEL 7.1+, CentOS 7.1+, or Fedora 23+ VMs
 * Either ssh key based auth for the root user or ssh key based auth for a user
   with sudo access (no password)
 * A checkout of openshift-ansible from https://github.com/openshift/openshift-ansible/
@@ -59,12 +59,12 @@ option to ansible-playbook.
 # This is an example of a bring your own (byo) host inventory
 
 # Create an OSEv3 group that contains the masters and nodes groups
-[OSv3:children]
+[OSEv3:children]
 masters
 nodes
 
 # Set variables common for all OSEv3 hosts
-[OSv3:vars]
+[OSEv3:vars]
 
 # SSH user, this user should allow ssh based auth without requiring a password
 ansible_ssh_user=root
@@ -94,6 +94,8 @@ osv3-lb.example.com
 
 The hostnames above should resolve both from the hosts themselves and
 the host where ansible is running (if different).
+
+A more complete example inventory file ([hosts.origin.example](https://github.com/openshift/openshift-ansible/blob/master/inventory/byo/hosts.origin.example)) is available under the [`/inventory/byo`](https://github.com/openshift/openshift-ansible/tree/master/inventory/byo) directory.
 
 ## Running the ansible playbooks
 From the openshift-ansible checkout run:

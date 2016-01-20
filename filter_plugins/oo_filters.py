@@ -8,11 +8,12 @@ Custom filters for use in openshift-ansible
 from ansible import errors
 from operator import itemgetter
 import OpenSSL.crypto
-import os.path
+import os
 import pdb
 import re
 import json
-
+import yaml
+from ansible.utils.unicode import to_unicode
 
 class FilterModule(object):
     ''' Custom ansible filters '''
@@ -366,9 +367,6 @@ class FilterModule(object):
                            "keyfile": "/etc/origin/master/named_certificates/custom2.key",
                            "names": [ "some-hostname.com" ] }]
         '''
-        if not issubclass(type(certificates), list):
-            raise errors.AnsibleFilterError("|failed expects certificates is a list")
-
         if not issubclass(type(named_certs_dir), unicode):
             raise errors.AnsibleFilterError("|failed expects named_certs_dir is unicode")
 
@@ -433,6 +431,7 @@ class FilterModule(object):
             '''
             for tag in tags:
                 # Skip tag_env-host-type to avoid ambiguity with tag_env
+                # Removing env-host-type tag but leaving this here
                 if tag[:17] == 'tag_env-host-type':
                     continue
                 if tag[:len(key)+4] == 'tag_' + key:
@@ -467,6 +466,29 @@ class FilterModule(object):
                 pass
         return clusters
 
+    @staticmethod
+    def oo_generate_secret(num_bytes):
+        ''' generate a session secret '''
+
+        if not issubclass(type(num_bytes), int):
+            raise errors.AnsibleFilterError("|failed expects num_bytes is int")
+
+        secret = os.urandom(num_bytes)
+        return secret.encode('base-64').strip()
+
+    @staticmethod
+    def to_padded_yaml(data, level=0, indent=2, **kw):
+        ''' returns a yaml snippet padded to match the indent level you specify '''
+        if data in [None, ""]:
+            return ""
+
+        try:
+            transformed = yaml.safe_dump(data, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
+            padded = "\n".join([" " * level * indent + line for line in transformed.splitlines()])
+            return to_unicode("\n{0}".format(padded))
+        except Exception as my_e:
+            raise errors.AnsibleFilterError('Failed to convert: %s', my_e)
+
     def filters(self):
         ''' returns a mapping of filters to methods '''
         return {
@@ -485,5 +507,7 @@ class FilterModule(object):
             "oo_parse_heat_stack_outputs": self.oo_parse_heat_stack_outputs,
             "oo_parse_named_certificates": self.oo_parse_named_certificates,
             "oo_haproxy_backend_masters": self.oo_haproxy_backend_masters,
-            "oo_pretty_print_cluster": self.oo_pretty_print_cluster
+            "oo_pretty_print_cluster": self.oo_pretty_print_cluster,
+            "oo_generate_secret": self.oo_generate_secret,
+            "to_padded_yaml": self.to_padded_yaml,
         }

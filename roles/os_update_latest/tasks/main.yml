@@ -1,8 +1,8 @@
 ---
-- name: Update all packages
-  yum: name=* state=latest
-  when: ansible_pkg_mgr == "yum"
+- fail:
+    msg: "Update is not yet supported by this playbook on atomic hosts"
+  when: openshift.common.is_containerized | bool
 
 - name: Update all packages
-  dnf: name=* state=latest
-  when: ansible_pkg_mgr == "dnf"
+  action: "{{ ansible_pkg_mgr }} name=* state=latest"
+  when: not openshift.common.is_containerized | bool

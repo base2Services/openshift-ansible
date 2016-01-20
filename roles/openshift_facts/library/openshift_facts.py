@@ -188,9 +188,6 @@ def normalize_gce_facts(metadata, facts):
     _, _, zone = metadata['instance']['zone'].rpartition('/')
     facts['zone'] = zone
 
-    # Default to no sdn for GCE deployments
-    facts['use_openshift_sdn'] = False
-
     # GCE currently only supports a single interface
     facts['network']['ip'] = facts['network']['interfaces'][0]['ips'][0]
     pub_ip = facts['network']['interfaces'][0]['public_ips'][0]
@@ -461,52 +458,68 @@ def set_url_facts_if_unset(facts):
                   were not already present
     """
     if 'master' in facts:
-        api_use_ssl = facts['master']['api_use_ssl']
-        api_port = facts['master']['api_port']
-        console_use_ssl = facts['master']['console_use_ssl']
-        console_port = facts['master']['console_port']
-        console_path = facts['master']['console_path']
-        etcd_use_ssl = facts['master']['etcd_use_ssl']
-        etcd_hosts = facts['master']['etcd_hosts']
-        etcd_port = facts['master']['etcd_port']
         hostname = facts['common']['hostname']
-        public_hostname = facts['common']['public_hostname']
         cluster_hostname = facts['master'].get('cluster_hostname')
         cluster_public_hostname = facts['master'].get('cluster_public_hostname')
+        public_hostname = facts['common']['public_hostname']
+        api_hostname = cluster_hostname if cluster_hostname else hostname
+        api_public_hostname = cluster_public_hostname if cluster_public_hostname else public_hostname
+        console_path = facts['master']['console_path']
+        etcd_hosts = facts['master']['etcd_hosts']
 
-        if 'etcd_urls' not in facts['master']:
-            etcd_urls = []
-            if etcd_hosts != '':
-                facts['master']['etcd_port'] = etcd_port
-                facts['master']['embedded_etcd'] = False
-                for host in etcd_hosts:
-                    etcd_urls.append(format_url(etcd_use_ssl, host,
-                                                etcd_port))
-            else:
-                etcd_urls = [format_url(etcd_use_ssl, hostname,
-                                        etcd_port)]
-            facts['master']['etcd_urls'] = etcd_urls
-        if 'api_url' not in facts['master']:
-            api_hostname = cluster_hostname if cluster_hostname else hostname
-            facts['master']['api_url'] = format_url(api_use_ssl, api_hostname,
-                                                    api_port)
-        if 'public_api_url' not in facts['master']:
-            api_public_hostname = cluster_public_hostname if cluster_public_hostname else public_hostname
-            facts['master']['public_api_url'] = format_url(api_use_ssl,
-                                                           api_public_hostname,
-                                                           api_port)
-        if 'console_url' not in facts['master']:
-            console_hostname = cluster_hostname if cluster_hostname else hostname
-            facts['master']['console_url'] = format_url(console_use_ssl,
-                                                        console_hostname,
-                                                        console_port,
-                                                        console_path)
-        if 'public_console_url' not in facts['master']:
-            console_public_hostname = cluster_public_hostname if cluster_public_hostname else public_hostname
-            facts['master']['public_console_url'] = format_url(console_use_ssl,
-                                                               console_public_hostname,
-                                                               console_port,
-                                                               console_path)
+        use_ssl = dict(
+            api=facts['master']['api_use_ssl'],
+            public_api=facts['master']['api_use_ssl'],
+            loopback_api=facts['master']['api_use_ssl'],
+            console=facts['master']['console_use_ssl'],
+            public_console=facts['master']['console_use_ssl'],
+            etcd=facts['master']['etcd_use_ssl']
+        )
+
+        ports = dict(
+            api=facts['master']['api_port'],
+            public_api=facts['master']['api_port'],
+            loopback_api=facts['master']['api_port'],
+            console=facts['master']['console_port'],
+            public_console=facts['master']['console_port'],
+            etcd=facts['master']['etcd_port'],
+        )
+
+        etcd_urls = []
+        if etcd_hosts != '':
+            facts['master']['etcd_port'] = ports['etcd']
+            facts['master']['embedded_etcd'] = False
+            for host in etcd_hosts:
+                etcd_urls.append(format_url(use_ssl['etcd'], host,
+                                            ports['etcd']))
+        else:
+            etcd_urls = [format_url(use_ssl['etcd'], hostname,
+                                    ports['etcd'])]
+
+        facts['master'].setdefault('etcd_urls', etcd_urls)
+
+        prefix_hosts = [('api', api_hostname),
+                        ('public_api', api_public_hostname),
+                        ('loopback_api', hostname)]
+
+        for prefix, host in prefix_hosts:
+            facts['master'].setdefault(prefix + '_url', format_url(use_ssl[prefix],
+                                                                   host,
+                                                                   ports[prefix]))
+
+
+        r_lhn = "{0}:{1}".format(api_hostname, ports['api']).replace('.', '-')
+        facts['master'].setdefault('loopback_cluster_name', r_lhn)
+        facts['master'].setdefault('loopback_context_name', "default/{0}/system:openshift-master".format(r_lhn))
+        facts['master'].setdefault('loopback_user', "system:openshift-master/{0}".format(r_lhn))
+
+        prefix_hosts = [('console', api_hostname), ('public_console', api_public_hostname)]
+        for prefix, host in prefix_hosts:
+            facts['master'].setdefault(prefix + '_url', format_url(use_ssl[prefix],
+                                                                   host,
+                                                                   ports[prefix],
+                                                                   console_path))
+
     return facts
 
 def set_aggregate_facts(facts):
@@ -628,7 +641,7 @@ def set_deployment_facts_if_unset(facts):
             facts['common']['service_type'] = service_type
         if 'config_base' not in facts['common']:
             config_base = '/etc/origin'
-            if deployment_type in ['enterprise', 'online']:
+            if deployment_type in ['enterprise']:
                 config_base = '/etc/openshift'
             # Handle upgrade scenarios when symlinks don't yet exist:
             if not os.path.exists(config_base) and os.path.exists('/etc/openshift'):
@@ -636,12 +649,25 @@ def set_deployment_facts_if_unset(facts):
             facts['common']['config_base'] = config_base
         if 'data_dir' not in facts['common']:
             data_dir = '/var/lib/origin'
-            if deployment_type in ['enterprise', 'online']:
+            if deployment_type in ['enterprise']:
                 data_dir = '/var/lib/openshift'
             # Handle upgrade scenarios when symlinks don't yet exist:
             if not os.path.exists(data_dir) and os.path.exists('/var/lib/openshift'):
                 data_dir = '/var/lib/openshift'
             facts['common']['data_dir'] = data_dir
+
+        # remove duplicate and empty strings from registry lists
+        for cat in  ['additional', 'blocked', 'insecure']:
+            key = 'docker_{0}_registries'.format(cat)
+            if key in facts['common']:
+                facts['common'][key] = list(set(facts['common'][key]) - set(['']))
+
+
+        if deployment_type in ['enterprise', 'atomic-enterprise', 'openshift-enterprise']:
+            addtl_regs = facts['common'].get('docker_additional_registries', [])
+            ent_reg = 'registry.access.redhat.com'
+            if ent_reg not in addtl_regs:
+                facts['common']['docker_additional_registries'] = addtl_regs + [ent_reg]
 
     for role in ('master', 'node'):
         if role in facts:
@@ -690,11 +716,36 @@ def set_version_facts_if_unset(facts):
         if version is not None:
             if deployment_type == 'origin':
                 version_gt_3_1_or_1_1 = LooseVersion(version) > LooseVersion('1.0.6')
+                version_gt_3_1_1_or_1_1_1 = LooseVersion(version) > LooseVersion('1.1.1')
             else:
                 version_gt_3_1_or_1_1 = LooseVersion(version) > LooseVersion('3.0.2.900')
+                version_gt_3_1_1_or_1_1_1 = LooseVersion(version) > LooseVersion('3.1.1')
         else:
             version_gt_3_1_or_1_1 = True
+            version_gt_3_1_1_or_1_1_1 = True
         facts['common']['version_greater_than_3_1_or_1_1'] = version_gt_3_1_or_1_1
+        facts['common']['version_greater_than_3_1_1_or_1_1_1'] = version_gt_3_1_1_or_1_1_1
+
+    return facts
+
+def set_manageiq_facts_if_unset(facts):
+    """ Set manageiq facts. This currently includes common.use_manageiq.
+
+        Args:
+            facts (dict): existing facts
+        Returns:
+            dict: the facts dict updated with version facts.
+        Raises:
+            OpenShiftFactsInternalError:
+    """
+    if 'common' not in facts:
+        if 'version_greater_than_3_1_or_1_1' not in facts['common']:
+            raise OpenShiftFactsInternalError(
+                "Invalid invocation: The required facts are not set"
+            )
+    if 'use_manageiq' not in facts['common']:
+        facts['common']['use_manageiq'] = facts['common']['version_greater_than_3_1_or_1_1']
+
     return facts
 
 def set_sdn_facts_if_unset(facts, system_facts):
@@ -710,7 +761,8 @@ def set_sdn_facts_if_unset(facts, system_facts):
     if 'common' in facts:
         use_sdn = facts['common']['use_openshift_sdn']
         if not (use_sdn == '' or isinstance(use_sdn, bool)):
-            facts['common']['use_openshift_sdn'] = bool(strtobool(str(use_sdn)))
+            use_sdn = bool(strtobool(str(use_sdn)))
+            facts['common']['use_openshift_sdn'] = use_sdn
         if 'sdn_network_plugin_name' not in facts['common']:
             plugin = 'redhat/openshift-ovs-subnet' if use_sdn else ''
             facts['common']['sdn_network_plugin_name'] = plugin
@@ -845,10 +897,6 @@ def apply_provider_facts(facts, provider_facts):
     if not provider_facts:
         return facts
 
-    use_openshift_sdn = provider_facts.get('use_openshift_sdn')
-    if isinstance(use_openshift_sdn, bool):
-        facts['common']['use_openshift_sdn'] = use_openshift_sdn
-
     common_vars = [('hostname', 'ip'), ('public_hostname', 'public_ip')]
     for h_var, ip_var in common_vars:
         ip_value = provider_facts['network'].get(ip_var)
@@ -919,6 +967,7 @@ def save_local_facts(filename, facts):
             os.makedirs(fact_dir)
         with open(filename, 'w') as fact_file:
             fact_file.write(module.jsonify(facts))
+        os.chmod(filename, 0o600)
     except (IOError, OSError) as ex:
         raise OpenShiftFactsFileWriteError(
             "Could not create fact file: %s, error: %s" % (filename, ex)
@@ -954,6 +1003,62 @@ def get_local_facts_from_file(filename):
     return local_facts
 
 
+def set_container_facts_if_unset(facts):
+    """ Set containerized facts.
+
+        Args:
+            facts (dict): existing facts
+        Returns:
+            dict: the facts dict updated with the generated containerization
+            facts
+    """
+    deployment_type = facts['common']['deployment_type']
+    if deployment_type in ['enterprise', 'openshift-enterprise']:
+        master_image = 'openshift3/ose'
+        cli_image = master_image
+        node_image = 'openshift3/node'
+        ovs_image = 'openshift3/openvswitch'
+        etcd_image = 'registry.access.redhat.com/rhel7/etcd'
+    elif deployment_type == 'atomic-enterprise':
+        master_image = 'aep3_beta/aep'
+        cli_image = master_image
+        node_image = 'aep3_beta/node'
+        ovs_image = 'aep3_beta/openvswitch'
+        etcd_image = 'registry.access.redhat.com/rhel7/etcd'
+    else:
+        master_image = 'openshift/origin'
+        cli_image = master_image
+        node_image = 'openshift/node'
+        ovs_image = 'openshift/openvswitch'
+        etcd_image = 'registry.access.redhat.com/rhel7/etcd'
+
+    facts['common']['is_atomic'] = os.path.isfile('/run/ostree-booted')
+    if 'is_containerized' not in facts['common']:
+        facts['common']['is_containerized'] = facts['common']['is_atomic']
+    if 'cli_image' not in facts['common']:
+        facts['common']['cli_image'] = cli_image
+    if 'etcd' in facts and 'etcd_image' not in facts['etcd']:
+        facts['etcd']['etcd_image'] = etcd_image
+    if 'master' in facts and 'master_image' not in facts['master']:
+        facts['master']['master_image'] = master_image
+    if 'node' in facts:
+        if 'node_image' not in facts['node']:
+            facts['node']['node_image'] = node_image
+        if 'ovs_image' not in facts['node']:
+            facts['node']['ovs_image'] = ovs_image
+
+    if facts['common']['is_containerized']:
+        facts['common']['admin_binary'] = '/usr/local/bin/oadm'
+        facts['common']['client_binary'] = '/usr/local/bin/oc'
+
+    return facts
+
+
+class OpenShiftFactsInternalError(Exception):
+    """Origin Facts Error"""
+    pass
+
+
 class OpenShiftFactsUnsupportedRoleError(Exception):
     """Origin Facts Unsupported Role Error"""
     pass
@@ -976,6 +1081,7 @@ class OpenShiftFacts(object):
             facts (dict): facts for the host
 
         Args:
+            module (AnsibleModule): an AnsibleModule object
             role (str): role for setting local facts
             filename (str): local facts file to use
             local_facts (dict): local facts to set
@@ -985,7 +1091,7 @@ class OpenShiftFacts(object):
         Raises:
             OpenShiftFactsUnsupportedRoleError:
     """
-    known_roles = ['common', 'master', 'node', 'master_sdn', 'node_sdn', 'etcd']
+    known_roles = ['common', 'master', 'node', 'etcd', 'nfs']
 
     def __init__(self, role, filename, local_facts, additive_facts_to_overwrite=False):
         self.changed = False
@@ -1029,8 +1135,10 @@ class OpenShiftFacts(object):
         facts = set_sdn_facts_if_unset(facts, self.system_facts)
         facts = set_deployment_facts_if_unset(facts)
         facts = set_version_facts_if_unset(facts)
+        facts = set_manageiq_facts_if_unset(facts)
         facts = set_aggregate_facts(facts)
         facts = set_etcd_facts_if_unset(facts)
+        facts = set_container_facts_if_unset(facts)
         return dict(openshift=facts)
 
     def get_defaults(self, roles):
@@ -1053,14 +1161,15 @@ class OpenShiftFacts(object):
 
         common = dict(use_openshift_sdn=True, ip=ip_addr, public_ip=ip_addr,
                       deployment_type='origin', hostname=hostname,
-                      public_hostname=hostname, use_manageiq=False)
-        common['client_binary'] = 'oc' if os.path.isfile('/usr/bin/oc') else 'osc'
-        common['admin_binary'] = 'oadm' if os.path.isfile('/usr/bin/oadm') else 'osadm'
+                      public_hostname=hostname)
+        common['client_binary'] = 'oc'
+        common['admin_binary'] = 'oadm'
         common['dns_domain'] = 'cluster.local'
+        common['install_examples'] = True
         defaults['common'] = common
 
         if 'master' in roles:
-            master = dict(api_use_ssl=True, api_port='8443',
+            master = dict(api_use_ssl=True, api_port='8443', controllers_port='8444',
                           console_use_ssl=True, console_path='/console',
                           console_port='8443', etcd_use_ssl=True, etcd_hosts='',
                           etcd_port='4001', portal_net='172.30.0.0/16',
@@ -1077,6 +1186,12 @@ class OpenShiftFacts(object):
             node = dict(labels={}, annotations={}, portal_net='172.30.0.0/16',
                         iptables_sync_period='5s', set_node_ip=False)
             defaults['node'] = node
+
+        if 'nfs' in roles:
+            nfs = dict(exports_dir='/var/export', registry_volume='regvol',
+                       export_options='*(rw,sync,all_squash)')
+            defaults['nfs'] = nfs
+
         return defaults
 
     def guess_host_provider(self):
@@ -1188,14 +1303,78 @@ class OpenShiftFacts(object):
                 del facts[key]
 
         if new_local_facts != local_facts:
+            self.validate_local_facts(new_local_facts)
             changed = True
-
             if not module.check_mode:
                 save_local_facts(self.filename, new_local_facts)
 
         self.changed = changed
         return new_local_facts
 
+    def validate_local_facts(self, facts=None):
+        """ Validate local facts
+
+            Args:
+                facts (dict): local facts to validate
+        """
+        invalid_facts = dict()
+        invalid_facts = self.validate_master_facts(facts, invalid_facts)
+        if invalid_facts:
+            msg = 'Invalid facts detected:\n'
+            for key in invalid_facts.keys():
+                msg += '{0}: {1}\n'.format(key, invalid_facts[key])
+            module.fail_json(msg=msg,
+                             changed=self.changed)
+
+    # disabling pylint errors for line-too-long since we're dealing
+    # with best effort reduction of error messages here.
+    # disabling errors for too-many-branches since we require checking
+    # many conditions.
+    # pylint: disable=line-too-long, too-many-branches
+    @staticmethod
+    def validate_master_facts(facts, invalid_facts):
+        """ Validate master facts
+
+            Args:
+                facts (dict): local facts to validate
+                invalid_facts (dict): collected invalid_facts
+
+            Returns:
+                dict: Invalid facts
+        """
+        if 'master' in facts:
+            # openshift.master.session_auth_secrets
+            if 'session_auth_secrets' in facts['master']:
+                session_auth_secrets = facts['master']['session_auth_secrets']
+                if not issubclass(type(session_auth_secrets), list):
+                    invalid_facts['session_auth_secrets'] = 'Expects session_auth_secrets is a list.'
+                elif 'session_encryption_secrets' not in facts['master']:
+                    invalid_facts['session_auth_secrets'] = ('openshift_master_session_encryption secrets must be set '
+                                                             'if openshift_master_session_auth_secrets is provided.')
+                elif len(session_auth_secrets) != len(facts['master']['session_encryption_secrets']):
+                    invalid_facts['session_auth_secrets'] = ('openshift_master_session_auth_secrets and '
+                                                             'openshift_master_session_encryption_secrets must be '
+                                                             'equal length.')
+                else:
+                    for secret in session_auth_secrets:
+                        if len(secret) < 32:
+                            invalid_facts['session_auth_secrets'] = ('Invalid secret in session_auth_secrets. '
+                                                                     'Secrets must be at least 32 characters in length.')
+            # openshift.master.session_encryption_secrets
+            if 'session_encryption_secrets' in facts['master']:
+                session_encryption_secrets = facts['master']['session_encryption_secrets']
+                if not issubclass(type(session_encryption_secrets), list):
+                    invalid_facts['session_encryption_secrets'] = 'Expects session_encryption_secrets is a list.'
+                elif 'session_auth_secrets' not in facts['master']:
+                    invalid_facts['session_encryption_secrets'] = ('openshift_master_session_auth_secrets must be '
+                                                                   'set if openshift_master_session_encryption_secrets '
+                                                                   'is provided.')
+                else:
+                    for secret in session_encryption_secrets:
+                        if len(secret) not in [16, 24, 32]:
+                            invalid_facts['session_encryption_secrets'] = ('Invalid secret in session_encryption_secrets. '
+                                                                           'Secrets must be 16, 24, or 32 characters in length.')
+        return invalid_facts
 
 def main():
     """ main """

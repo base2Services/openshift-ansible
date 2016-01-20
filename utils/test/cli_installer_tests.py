@@ -225,6 +225,44 @@ hosts:
     master: true
 """
 
+QUICKHA_CONFIG_PRECONFIGURED_LB = """
+variant: %s
+ansible_ssh_user: root
+hosts:
+  - connect_to: 10.0.0.1
+    ip: 10.0.0.1
+    hostname: master-private.example.com
+    public_ip: 24.222.0.1
+    public_hostname: master.example.com
+    master: true
+    node: true
+  - connect_to: 10.0.0.2
+    ip: 10.0.0.2
+    hostname: node1-private.example.com
+    public_ip: 24.222.0.2
+    public_hostname: node1.example.com
+    master: true
+    node: true
+  - connect_to: 10.0.0.3
+    ip: 10.0.0.3
+    hostname: node2-private.example.com
+    public_ip: 24.222.0.3
+    public_hostname: node2.example.com
+    node: true
+    master: true
+  - connect_to: 10.0.0.4
+    ip: 10.0.0.4
+    hostname: node3-private.example.com
+    public_ip: 24.222.0.4
+    public_hostname: node3.example.com
+    node: true
+  - connect_to: proxy-private.example.com
+    hostname: proxy-private.example.com
+    public_hostname: proxy.example.com
+    master_lb: true
+    preconfigured: true
+"""
+
 class UnattendedCliTests(OOCliFixture):
 
     def setUp(self):
@@ -608,6 +646,25 @@ class UnattendedCliTests(OOCliFixture):
         # This is not a valid configuration:
         self.assert_result(result, 1)
 
+    #unattended with preconfigured lb
+    @patch('ooinstall.openshift_ansible.run_main_playbook')
+    @patch('ooinstall.openshift_ansible.load_system_facts')
+    def test_quick_ha_preconfigured_lb(self, load_facts_mock, run_playbook_mock):
+        load_facts_mock.return_value = (MOCK_FACTS_QUICKHA, 0)
+        run_playbook_mock.return_value = 0
+
+        config_file = self.write_config(os.path.join(self.work_dir,
+            'ooinstall.conf'), QUICKHA_CONFIG_PRECONFIGURED_LB % 'openshift-enterprise')
+
+        self.cli_args.extend(["-c", config_file, "install"])
+        result = self.runner.invoke(cli.cli, self.cli_args)
+        self.assert_result(result, 0)
+
+        # Make sure we ran on the expected masters and nodes:
+        hosts = run_playbook_mock.call_args[0][0]
+        hosts_to_run_on = run_playbook_mock.call_args[0][1]
+        self.assertEquals(5, len(hosts))
+        self.assertEquals(5, len(hosts_to_run_on))
 
 class AttendedCliTests(OOCliFixture):
 
@@ -624,9 +681,9 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True),
-            ('10.0.0.2', False),
-            ('10.0.0.3', False)],
+            ('10.0.0.1', True, False),
+            ('10.0.0.2', False, False),
+            ('10.0.0.3', False, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y')
@@ -665,10 +722,10 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True),
-            ('10.0.0.2', False),
+            ('10.0.0.1', True, False),
+            ('10.0.0.2', False, False),
             ],
-                                      add_nodes=[('10.0.0.3', False)],
+                                      add_nodes=[('10.0.0.3', False, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y')
@@ -716,9 +773,9 @@ class AttendedCliTests(OOCliFixture):
         mock_facts['10.0.0.2']['common']['version'] = "3.0.0"
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True),
+            ('10.0.0.1', True, False),
             ],
-                                      add_nodes=[('10.0.0.2', False)],
+                                      add_nodes=[('10.0.0.2', False, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       schedulable_masters_ok=True,
@@ -739,10 +796,10 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True),
-            ('10.0.0.2', True),
-            ('10.0.0.3', True),
-            ('10.0.0.4', False)],
+            ('10.0.0.1', True, False),
+            ('10.0.0.2', True, False),
+            ('10.0.0.3', True, False),
+            ('10.0.0.4', False, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y',
@@ -780,9 +837,9 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True),
-            ('10.0.0.2', True),
-            ('10.0.0.3', True)],
+            ('10.0.0.1', True, False),
+            ('10.0.0.2', True, False),
+            ('10.0.0.3', True, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y',
@@ -815,10 +872,10 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-                                      ('10.0.0.1', True),
-                                      ('10.0.0.2', True),
-                                      ('10.0.0.3', False),
-                                      ('10.0.0.4', True)],
+                                      ('10.0.0.1', True, False),
+                                      ('10.0.0.2', True, False),
+                                      ('10.0.0.3', False, False),
+                                      ('10.0.0.4', True, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y',
@@ -836,7 +893,7 @@ class AttendedCliTests(OOCliFixture):
         run_playbook_mock.return_value = 0
 
         cli_input = build_input(hosts=[
-            ('10.0.0.1', True)],
+            ('10.0.0.1', True, False)],
                                       ssh_user='root',
                                       variant_num=1,
                                       confirm_facts='y')
@@ -855,6 +912,25 @@ class AttendedCliTests(OOCliFixture):
         inventory.read(os.path.join(self.work_dir, '.ansible/hosts'))
         self.assertEquals('True',
             inventory.get('nodes', '10.0.0.1  openshift_schedulable'))
+
+    #interactive 3.0 install confirm no HA hints
+    @patch('ooinstall.openshift_ansible.run_main_playbook')
+    @patch('ooinstall.openshift_ansible.load_system_facts')
+    def test_ha_hint(self, load_facts_mock, run_playbook_mock):
+        load_facts_mock.return_value = (MOCK_FACTS, 0)
+        run_playbook_mock.return_value = 0
+
+        cli_input = build_input(hosts=[
+            ('10.0.0.1', True, False)],
+                                      ssh_user='root',
+                                      variant_num=2,
+                                      confirm_facts='y')
+        self.cli_args.append("install")
+        result = self.runner.invoke(cli.cli, self.cli_args,
+            input=cli_input)
+        self.assert_result(result, 0)
+        self.assertTrue("NOTE: Add a total of 3 or more Masters to perform an HA installation."
+            not in result.output)
 
 # TODO: test with config file, attended add node
 # TODO: test with config file, attended new node already in config file

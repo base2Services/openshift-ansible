@@ -19,13 +19,15 @@ def generate_inventory(hosts):
     global CFG
     masters = [host for host in hosts if host.master]
     nodes = [host for host in hosts if host.node]
+    new_nodes = [host for host in hosts if host.node and host.new_host]
     proxy = determine_proxy_configuration(hosts)
     multiple_masters = len(masters) > 1
+    scaleup = len(new_nodes) > 0
 
     base_inventory_path = CFG.settings['ansible_inventory_path']
     base_inventory = open(base_inventory_path, 'w')
 
-    write_inventory_children(base_inventory, multiple_masters, proxy)
+    write_inventory_children(base_inventory, multiple_masters, proxy, scaleup)
 
     write_inventory_vars(base_inventory, multiple_masters, proxy)
 
@@ -71,6 +73,11 @@ def generate_inventory(hosts):
         base_inventory.write('\n[lb]\n')
         write_host(proxy, base_inventory)
 
+    if scaleup:
+        base_inventory.write('\n[new_nodes]\n')
+        for node in new_nodes:
+            write_host(node, base_inventory)
+
     base_inventory.close()
     return base_inventory_path
 
@@ -84,12 +91,14 @@ def determine_proxy_configuration(hosts):
 
     return None
 
-def write_inventory_children(base_inventory, multiple_masters, proxy):
+def write_inventory_children(base_inventory, multiple_masters, proxy, scaleup):
     global CFG
 
     base_inventory.write('\n[OSEv3:children]\n')
     base_inventory.write('masters\n')
     base_inventory.write('nodes\n')
+    if scaleup:
+        base_inventory.write('new_nodes\n')
     if multiple_masters:
         base_inventory.write('etcd\n')
     if not getattr(proxy, 'preconfigured', True):
@@ -119,6 +128,8 @@ def write_host(host, inventory, schedulable=None):
         facts += ' openshift_hostname={}'.format(host.hostname)
     if host.public_hostname:
         facts += ' openshift_public_hostname={}'.format(host.public_hostname)
+    if host.containerized:
+        facts += ' containerized={}'.format(host.containerized)
     # TODO: For not write_host is handles both master and nodes.
     # Technically only nodes will ever need this.
 
@@ -157,9 +168,15 @@ def load_system_facts(inventory_file, os_facts_path, env_vars, verbose=False):
     status = subprocess.call(args, env=env_vars, stdout=FNULL)
     if not status == 0:
         return [], 1
-    callback_facts_file = open(CFG.settings['ansible_callback_facts_yaml'], 'r')
-    callback_facts = yaml.load(callback_facts_file)
-    callback_facts_file.close()
+
+    with open(CFG.settings['ansible_callback_facts_yaml'], 'r') as callback_facts_file:
+        try:
+            callback_facts = yaml.safe_load(callback_facts_file)
+        except yaml.YAMLError, exc:
+            print "Error in {}".format(CFG.settings['ansible_callback_facts_yaml']), exc
+            print "Try deleting and rerunning the atomic-openshift-installer"
+            sys.exit(1)
+
     return callback_facts, 0
 
 

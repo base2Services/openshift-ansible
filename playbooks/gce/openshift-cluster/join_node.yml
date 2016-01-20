@@ -1,9 +1,12 @@
 ---
 - name: Populate oo_hosts_to_update group
   hosts: localhost
+  connection: local
+  become: no
   gather_facts: no
   vars_files:
   - vars.yml
+  - cluster_hosts.yml
   tasks:
   - name: Evaluate oo_hosts_to_update
     add_host:
@@ -16,9 +19,12 @@
 
 - name: Populate oo_masters_to_config host group
   hosts: localhost
+  connection: local
+  become: no
   gather_facts: no
   vars_files:
   - vars.yml
+  - cluster_hosts.yml
   tasks:
   - name: Evaluate oo_nodes_to_config
     add_host:
@@ -29,11 +35,11 @@
 
   - name: Evaluate oo_first_master
     add_host:
-      name: "{{ groups['tag_env-host-type-' ~ cluster_id ~ '-openshift-master'][0] }}"
+      name: "{{ master_hosts | first }}"
       ansible_ssh_user: "{{ deployment_vars[deployment_type].ssh_user }}"
       ansible_sudo: "{{ deployment_vars[deployment_type].sudo }}"
       groups: oo_first_master
-    when: "'tag_env-host-type-{{ cluster_id }}-openshift-master' in groups"
+    when: master_hosts is defined and master_hosts|length > 0
 
 #- include: config.yml
 - include: ../../common/openshift-node/config.yml
@@ -42,8 +48,4 @@
     openshift_debug_level: 4
     openshift_deployment_type: "{{ deployment_type }}"
     openshift_hostname: "{{ ansible_default_ipv4.address }}"
-    openshift_use_openshift_sdn: true
     openshift_node_labels: "{{ lookup('oo_option', 'openshift_node_labels') }} "
-    os_sdn_network_plugin_name: "redhat/openshift-ovs-subnet"
-    osn_cluster_dns_domain: "{{ hostvars[groups.oo_first_master.0].openshift.dns.domain }}"
-    osn_cluster_dns_ip: "{{ hostvars[groups.oo_first_master.0].cluster_dns_ip }}"

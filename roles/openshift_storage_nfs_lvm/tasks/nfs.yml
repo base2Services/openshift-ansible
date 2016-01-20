@@ -1,12 +1,8 @@
 ---
 - name: Install NFS server
-  yum: name=nfs-utils state=present
-  when: ansible_pkg_mgr == "yum"
-
-- name: Install NFS server
-  dnf: name=nfs-utils state=present
-  when: ansible_pkg_mgr == "dnf"
-
+  action: "{{ ansible_pkg_mgr }} name=nfs-utils state=present"
+  when: not openshift.common.is_containerized | bool
+  
 - name: Start rpcbind
   service: name=rpcbind state=started enabled=yes
 

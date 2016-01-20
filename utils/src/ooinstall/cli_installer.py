@@ -33,9 +33,7 @@ def is_valid_hostname(hostname):
 def validate_prompt_hostname(hostname):
     if '' == hostname or is_valid_hostname(hostname):
         return hostname
-    raise click.BadParameter('"{}" appears to be an invalid hostname. ' \
-                             'Please double-check this value i' \
-                             'and re-enter it.'.format(hostname))
+    raise click.BadParameter('Invalid hostname. Please double-check this value and re-enter it.')
 
 def get_ansible_ssh_user():
     click.clear()
@@ -72,7 +70,7 @@ def delete_hosts(hosts):
                 click.echo("\"{}\" doesn't coorespond to any valid input.".format(del_idx))
     return hosts, None
 
-def collect_hosts(version=None, masters_set=False, print_summary=True):
+def collect_hosts(oo_cfg, existing_env=False, masters_set=False, print_summary=True):
     """
         Collect host information from user. This will later be filled in using
         ansible.
@@ -125,26 +123,29 @@ http://docs.openshift.com/enterprise/latest/architecture/infrastructure_componen
                 host_props['master'] = True
                 num_masters += 1
 
-                if version == '3.0':
+                if oo_cfg.settings['variant_version'] == '3.0':
                     masters_set = True
         host_props['node'] = True
 
-        #TODO: Reenable this option once container installs are out of tech preview
-        #rpm_or_container = click.prompt('Will this host be RPM or Container based (rpm/container)?',
-        #                                type=click.Choice(['rpm', 'container']),
-        #                                default='rpm')
-        #if rpm_or_container == 'container':
-        #    host_props['containerized'] = True
-        #else:
-        #    host_props['containerized'] = False
         host_props['containerized'] = False
+        if oo_cfg.settings['variant_version'] != '3.0':
+            rpm_or_container = click.prompt('Will this host be RPM or Container based (rpm/container)?',
+                                            type=click.Choice(['rpm', 'container']),
+                                            default='rpm')
+            if rpm_or_container == 'container':
+                host_props['containerized'] = True
+
+        if existing_env:
+            host_props['new_host'] = True
+        else:
+            host_props['new_host'] = False
 
         host = Host(**host_props)
 
         hosts.append(host)
 
         if print_summary:
-            print_installation_summary(hosts)
+            print_installation_summary(hosts, oo_cfg.settings['variant_version'])
 
         # If we have one master, this is enough for an all-in-one deployment,
         # thus we can start asking if you wish to proceed. Otherwise we assume
@@ -158,7 +159,7 @@ http://docs.openshift.com/enterprise/latest/architecture/infrastructure_componen
     return hosts
 
 
-def print_installation_summary(hosts):
+def print_installation_summary(hosts, version=None):
     """
     Displays a summary of all hosts configured thus far, and what role each
     will play.
@@ -179,7 +180,7 @@ def print_installation_summary(hosts):
     click.echo('Total OpenShift Masters: %s' % len(masters))
     click.echo('Total OpenShift Nodes: %s' % len(nodes))
 
-    if len(masters) == 1:
+    if len(masters) == 1 and version != '3.0':
         ha_hint_message = """
 NOTE: Add a total of 3 or more Masters to perform an HA installation."""
         click.echo(ha_hint_message)
@@ -494,20 +495,20 @@ https://docs.openshift.com/enterprise/latest/admin_guide/install/prerequisites.h
         click.clear()
 
     if not oo_cfg.hosts:
-        oo_cfg.hosts = collect_hosts(version=oo_cfg.settings['variant_version'])
+        oo_cfg.hosts = collect_hosts(oo_cfg)
         click.clear()
 
     return oo_cfg
 
 
-def collect_new_nodes():
+def collect_new_nodes(oo_cfg):
     click.clear()
     click.echo('*** New Node Configuration ***')
     message = """
 Add new nodes here
     """
     click.echo(message)
-    return collect_hosts(masters_set=True, print_summary=False)
+    return collect_hosts(oo_cfg, existing_env=True, masters_set=True, print_summary=False)
 
 def get_installed_hosts(hosts, callback_facts):
     installed_hosts = []
@@ -577,7 +578,7 @@ def get_hosts_to_run_on(oo_cfg, callback_facts, unattended, force, verbose):
                     sys.exit(1)
             else:
                 if not force:
-                    new_nodes = collect_new_nodes()
+                    new_nodes = collect_new_nodes(oo_cfg)
 
                     hosts_to_run_on.extend(new_nodes)
                     oo_cfg.hosts.extend(new_nodes)
@@ -752,8 +753,8 @@ def install(ctx, force):
 
     check_hosts_config(oo_cfg, ctx.obj['unattended'])
 
+    print_installation_summary(oo_cfg.hosts, oo_cfg.settings.get('variant_version', None))
     click.echo('Gathering information from hosts...')
-    print_installation_summary(oo_cfg.hosts)
     callback_facts, error = openshift_ansible.default_facts(oo_cfg.hosts,
         verbose)
     if error:

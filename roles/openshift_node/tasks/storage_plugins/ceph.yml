@@ -1,12 +1,4 @@
 ---
 - name: Install Ceph storage plugin dependencies
-  yum:
-    pkg: ceph-common
-    state: installed
-  when: ansible_pkg_mgr == "yum"
-
-- name: Install Ceph storage plugin dependencies
-  dnf:
-    pkg: ceph-common
-    state: installed
-  when: ansible_pkg_mgr == "dnf"
+  action: "{{ ansible_pkg_mgr }} name=ceph-common state=present"
+  when: not openshift.common.is_atomic | bool
