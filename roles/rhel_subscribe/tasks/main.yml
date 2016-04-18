@@ -14,23 +14,24 @@
   when: ansible_distribution != 'RedHat'
 
 - fail:
-    msg: Either rhsub_user or the rhel_subscription_user env variable are required for this role.
+    msg: Either rsub_user or the rhel_subscription_user env variable are required for this role.
   when: rhel_subscription_user is not defined
 
 - fail:
-    msg: Either rhsub_pass or the rhel_subscription_pass env variable are required for this role.
+    msg: Either rsub_pass or the rhel_subscription_pass env variable are required for this role.
   when: rhel_subscription_pass is not defined
-
-- name: Satellite preparation
-  command: "rpm -Uvh http://{{ rhel_subscription_server }}/pub/katello-ca-consumer-latest.noarch.rpm"
-  args:
-    creates: /etc/rhsm/ca/katello-server-ca.pem
-  when: rhel_subscription_server is defined and rhel_subscription_server
 
 - name: RedHat subscriptions
   redhat_subscription:
     username: "{{ rhel_subscription_user }}"
     password: "{{ rhel_subscription_pass }}"
+    autosubscribe: no
+
+- include: enterprise.yml
+  when: deployment_type in [ 'enterprise', 'atomic-enterprise', 'openshift-enterprise' ]
+
+- include: origin-rhel.yml
+  when: deployment_type == 'origin'
 
 - name: Retrieve the OpenShift Pool ID
   command: subscription-manager list --available --matches="{{ rhel_subscription_pool }}" --pool-only
