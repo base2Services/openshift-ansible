@@ -46,5 +46,5 @@
   when: deployment_type in [ 'enterprise', 'atomic-enterprise', 'openshift-enterprise' ] and
         not openshift.common.is_atomic | bool
 
-  - include: origin-rhel.yml
+- include: origin-rhel.yml
   when: deployment_type == 'origin'
