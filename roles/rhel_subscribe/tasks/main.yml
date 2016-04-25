@@ -25,7 +25,7 @@
   redhat_subscription:
     username: "{{ rhel_subscription_user }}"
     password: "{{ rhel_subscription_pass }}"
-    autosubscribe: no
+    #autosubscribe: no
 
 - include: enterprise.yml
   when: deployment_type in [ 'enterprise', 'atomic-enterprise', 'openshift-enterprise' ]
@@ -40,7 +40,7 @@
 
 - name: Attach to OpenShift Pool
   command: subscription-manager subscribe --pool {{ openshift_pool_id.stdout_lines[0] }}
-  autosubscribe: no
+  #autosubscribe: no
 
 - include: enterprise.yml
   when: deployment_type in [ 'enterprise', 'atomic-enterprise', 'openshift-enterprise' ] and
