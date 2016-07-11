@@ -1,0 +1,297 @@
+---
+- hosts: all:!etcd 
+ #remote_user: dxiao
+  become: true
+
+  tasks:
+  - name: create rufus account 
+    user:
+      name=rshrestha
+      comment="Rufus Shrestha"
+      uid=3260
+      groups=adm,wheel
+      password="$6$nPEH1/2xIIay$8xgVCwjhGk/aw53QLL9.JbHthOCSvi4L54df5vkgRjIcjOSxTO1LU1xOe.WVLFSrL1Q27b5JKvB/N5aKPBzfc/"
+  - name: create rufus key file
+    authorized_key:
+      user=rshrestha
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCezH8E6UITIaGR5xnQfZUM+emE/FuWtAsCZjU5ZWXheCA/0/9C0kx8SWmHBZ6rJWShzTjxz9l5Dat6Z0ZSWfTv/WKVBw65zEiXGcnGk5IMN4Gcm/6IIFL9G2ZUkBz0xRwjHaNV5iYyXsAaxPqmi8QVM/bROaZ7ND29NIQxDZ2LpGlXzQN018+c8chiSGugj5gi64psUzhfFimUOSLxxpAdA7GUuUWL6q/D8hrVzsAsr/a3IWNNsc8cDrZniYvZTeJNh3n1jw7i0zJm/Ab2uTQ6OHXhOySOrXlA91ejmJ2L361TQxgUmXYZUaUUmzjdfRZuVQa3aP4xiQiLeFkAKbLR Rufus Shrestha"
+
+  - name: create dxiao account 
+    user:
+      name=dxiao
+      comment="David Xiao"
+      uid=3002
+      groups=adm,wheel
+      password="$6$Pxj3cweU$nR1aCzYPGhBuf.6mWf/Pk/vhUQAZHxdbh8Ib815hBAyejasKxbp4xj1xT3Bm5QUGUMLiM20xzJig83YOitXdl/"
+  - name: create dxiao key file
+    authorized_key:
+      user=dxiao
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGvftzjjb85OWWd9aWDQ+LFKO7i69cMhNq+5dRpqLQiBjLdCA1icHByPRiy8LapvVHYbe/HuHsh9EOKOVNlabJKADw1dhhdHFCQ5YZ0kbH1TSyHZ1o7+rKIzJpWwTwI5J0FrLK62xYIQjcdAVRi+4ReTrbmLKBadtgGQdfNNPpMcqieGZRWbfsKjCmLyiTjd0/vpJ3daIKVqRhE9kFm2TZyCPRLEhnrav6ofNtdk5enIjD8UkVJVGngE5R4JjU4davng8sIuH+kp0pqur2psv6eOTfku+LvhG609c7Fih9xpzsjVKytCdvFQQDZ1kbQqRAr8QxxgZQiA8I3MxwV4Jz David Xiao"
+
+  - name: create cvandenberg account 
+    user:
+      name=cvandenberg
+      comment="Clinton Van Den Berg"
+      uid=2004
+      groups=adm,wheel
+      password="$6$Pxj3cweU$nR1aCzYPGhBuf.6mWf/Pk/vhUQAZHxdbh8Ib815hBAyejasKxbp4xj1xT3Bm5QUGUMLiM20xzJig83YOitXdl/"
+  - name: create cvandenberg key file
+    authorized_key:
+      user=cvandenberg
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7pt+PBfm3bJ6sUkS/vLrj7kke1Nyyj53aQr3CLG63+A1QbDDkfQ6C0exl4RgVvtut7tbK9YLWaH8pE5PYEO2NkH8ExUr39VinRepWSqgn9r4kq9iNZ7UBOCpAO3EugsBJFFRBCa3c+a8OKoICHW7wDHX2k+O0vVzZV38RGxdd6M4vD1Mvrt4nP2zdFqXinrHn3YW8nSt1ihy9iXINpKmnhYLgY5NDH1/n348L9EWE4bbQCidfFKZnmgpuC+7e/qg4I5dLtZF2hOxhHSOkmJ7Rz/Du6RZRxlnZerN0Ym9Repe/wiyISDmtsZMwdm6OP+F5uTS3LNFJziNDFDrTv1m5 Clinton Van Den Berg"
+
+  - name: create dchappidi account 
+    user:
+      name=dchappidi
+      comment="Dinesh Chappidi"
+      uid=2019
+      groups=adm,wheel
+      password="$6$unbZA4zMF2eGwJ57$mDgGC0pzMa646OucPU.sj8WjRiOP0cakiTCq/ee4WQeLhPFDsJXrxdUPWchIBhQ2sKOLsFSn2DzwsChS9nWxZ1"
+  - name: create dchappidi key file
+    authorized_key:
+      user=dchappidi
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDcxeP8GSMsHhyMukvT//0ktDWiQMPHmJxCPjGAVYQ2KAJ+dJhMd/y7SgjNmDkKnmpb2kIvFoN1P270DNm/JI5Bz1tSl9vwsbQP+RnMnTGIrZagVwImezRfU0C63RH2GBmwrywlhFwhGZgHafriNgxd5oa8cBXaBJNm9HtJ7Q9CP9OMkrefRHd5oHWljSdwd9VATCyyvY0wOgl40dH+ldE7HKs0oq6AwEF5TJsTkGlu49y4r4D7NREFO7hfOIkAs5fb9ldGIKZ+efVlCC3DsOwF4q5D1GKdeFymM7hN88na3uHptaKU6O7sTIwIzz7bqF3PbGGXJ5Cw+yfLEnUtKhTH Dinesh Chappidi"
+
+  - name: create dduckworth account 
+    user:
+      name=dduckworth
+      comment="David Duckworth"
+      uid=2006
+      groups=adm,wheel
+      password="$6$QLnOG.Ztap4rzSy2$W4EiBs2lmtPtjqAenaEctUapcKHgeO3ktFwm1i69TAo9MT8S4YdtLlK/tZh9DEnpPf2BJjSULhLYz2E9TE3rm/"
+  - name: create dduckworth key file
+    authorized_key:
+      user=dduckworth
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnVz088kLz1Uxi1DWEA4gS86GczLlLdUoK01OSixMqrcx/0t8Fp6utooW/zgesE802bWxiLZZXkPEjku85ijDXZH0hVgyQeolYNDcPMhrSFAKDRTqjb0uMCLyRS7s8dxjol7D0oEkP7F9gnX+ftZKdG6P0pjsuecKOPatJDNEN8dw13pIzUYR/BNX0UWxfKC46s6O9Ypoof+eDrrJWfZMghfEIxFljyPZRHGBRMQ2smV5m7JA5I59fhL+LhVopIT5z60HxZWMt5MnKMc2Qz4ZBshHiYjC4rJbJUV2y7VQDT72yccjOUEb1lPtzrT8geRoIZNrn7POpLqJecrzQ+f5N David Duckworth"
+
+  - name: create dperera account 
+    user:
+      name=dperera
+      comment="dperera"
+      uid=2014
+      groups=adm,wheel
+      password="$6$Lo/lVRiDo.$Wk..AT/qWD81cn.u6XOy2B3W/moR8gla2e3bm9mGZLAEWN/sv0zd5zZJ0aj/3UNCrnBPSh81Ibha62pvIYFoQ0"
+  - name: create dperera key file
+    authorized_key:
+      user=dperera
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxDnMluKtwtTvyyNzcBkn0SQni/OaIzjxvmUYFK6xiO7TGpjxBqqVaYeZhCQSI44Zvm0EdtbT6dYtZIQFSMnEaZcjphYhpZ4ifYYtlZ7YDkbjLG9bbxjoPBAGR5C/yZxBN/97vBx3Kqbq3oW6y9OC8jYy3rByOf7XT9rtzx06kXvMCudMAP7vzHFp+GdWJu/oMOx0+ailTHXbn0Jpy3+ibk/g8ZbS1nzzBehzT2wWnXNT7GLJ5+gbKGUFltBjFdsp0VXERe9I8/YWoPSmcAA9srsdnPbQtpx9GK1gJtuB3X/uYBY3GhHW0hoAPtUMO7kxWZCq3Q6egasiHiqe/8o4/ dperera"
+
+  - name: create droshan account 
+    user:
+      name=droshan
+      comment="Dilanka Roshan"
+      uid=2017
+      groups=adm,wheel
+      password="$6$gJ/MuhuN$j6A2d0wV3mlHIRQDY63RklNi1GSkQ.pxbv2dWuIwaSXClLfD/W8tL9832SLzwRO1BhqR2XhTj/7ubNFqI9J"
+  - name: create droshan key file
+    authorized_key:
+      user=droshan
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAiwTRvf/4ycSA0Ko70maGfNSdUEZN+UzD8ruZ9yy1uftBmgfdynvy1tdqTw/IBCAUWizlLb0REUDiuUHKkE8y19ePNwV2VxRIJ2Otj+/WsyAF835r6jIegSqJdQn5/fEFvY+U7IF5/XS2bHLvwLx1Z9z6tUkPe7VYRXdyvQXNU/gn3JtI+2q8vSHjgBUd+H7M+lO9d9sPOfkq0b0OvrJ9c8rewJlrAV8upQr+1nlVn0g8vTznal1R4NHieQ4cD9SLXy4gie0C/y5PCD9EWtnoqyPYu74FIY/+5F82tqssHcln+2QC6frk05UCyl0Fonl9sRvJDch4wbDL+0S1y4vp5Q== Dilanka  Roshan"
+
+  - name: create gvillot account 
+    user:
+      name=gvillot
+      comment="Georges Villot"
+      uid=2008
+      groups=adm,wheel
+      password="$6$gJ/MuhuN$j6A2d0wV3mlHIRQDY63RklNi1GSkQ.pxbv2dWuIwaSXClLfD/W8tL9832SLzwRO1BhqR2XhTj/7ubNFqI9J"
+  - name: create gvillot key file
+    authorized_key:
+      user=gvillot
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/1KR6dcipTrowkSAYiWgAnjfXeGncHUE6U1krl/aNoJjH5qK4lN1nlZ70+l0rxSNigMmE2tmVokp+Cjal0qFT5BFPUqtPUfDIrsjckh1sHruBDmE7Of/ZCplgcnOxPKwm8EGhNp9x1q3WwaDyxsq5Dho6MRHecgjuqcaR71KrJPq1QgGb0T6w5lQRW1Z2T5NGEHVwVObXWFFPTMkFgULyIUbnyocnrV7gWNQgoTAwW+NDJSPeLDhYs75+G3oWuOGK+0j1u3vCmg2DIUQkYFYvdk9CnKAIv6UYDz8GWvMcCAeebIC7UGooQaarXxmjzkPvOUBGATaohxLFTNAgDUQ7 Georges Villot"
+
+
+  - name: create jduckworth account 
+    user:
+      name=jduckworth
+      comment="Joel Duckworth"
+      uid=2001
+      groups=adm,wheel
+      password="$6$vkseXFrA$jr9Gqv0jJiG60VFW/OWaGG/k1povy7pXtpB04OdUDZvmBCtXDf78LdmMfybOLmJkAq2kS9jDHgWNr2HmapqB50"
+  - name: create jduckworth key file
+    authorized_key:
+      user=jduckworth
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDs6bMNs/pbeFVD7mCb4J2aGvdCthD/oKVlk6qCNhploJfDJiCO8PnGSH4nVhZWv6Uo06Qy9ffUQ3545iKh7+ERAjCml8Xmz4dE+95nhtY0LsB8OEZvNKlOgrHqkUQ9K79E6x+9sLFo4tJevsDWJmQjxrj0nEX3qeogXoO30zTmTLjmOtuGwWgKKOtcD451OIPg88G7TfRrN0twmR3aC3j+DPhl/eX6HuKE3OrAS5m672cOqTP0oqjJgjS2HU7C11WvP1gEEq3yUxNOvHIMYLdQycXVGuqQ+ZBFYwvvrcFwVzFuPmB0hFlpGgBFVbE23jc+R4JPsOYgQ/eTGAIt8YID Joel Duckworth"
+
+  - name: create jhatfield account 
+    user:
+      name=jhatfield
+      comment="Josh Hatfield"
+      uid=3023
+      groups=adm,wheel
+      password="$6$vkseXFrA$jr9Gqv0jJiG60VFW/OWaGG/k1povy7pXtpB04OdUDZvmBCtXDf78LdmMfybOLmJkAq2kS9jDHgWNr2HmapqB50"
+  - name: create jhatfield key file
+    authorized_key:
+      user=jhatfield
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDD1xoeDArZiNXTFiUjS5x+fNwCNyMTP+PtDXbocD6wlpTVGQFPhoWtAhe58V3RIYFl3WIdTLXnCWUsSywmiSSEtIovWiXfDq9IZSCJFSTu3aOJqPGVv4dFuYGMzuKQprnVmeZuSkPR39C0lnoHWjww2Yld2HH7LwCN9gQG1w478PMMqWiF6zDn/r1d7B7N+AifXS58e6dlf0r5tQrhgfpfpvRGnd051rsUof6UhxD0dMdSBxj141bpYqVTm/7bpRZk+JSNdAdMT2i/n8mONRvDyxWyMU78Cw4YUusb0YePH92N/Tl5/YTHZqlMhJa+g2v5MZ0eRgNaTlY5AQwo6ZIj Josh Hatfield"
+
+  - name: create lwakefield account 
+    user:
+      name=lwakefield
+      comment="Luke Wakefield"
+      uid=3014
+      groups=adm,wheel
+      password="$6$iMnRfu0H$0eJaaevoEXp40GhpUIK3T3QCK47WvpOS5Xkv2DtApQgi6hPu/c1X5EwU.yQFxwglMNPrDKnj2zintX0Igegwn/"
+  - name: create lwakefield key file
+    authorized_key:
+      user=lwakefield
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8l8tnBTaScNife68I/rblo16eZjfweApDgza4nbKpKn+3HLaXghpM6/fPlf+9xMTeUbKqZ7cMTgjdcyK4l2Yzxz5uoLkLVPQoIpshDJzZZnQPA1RUZmDcLhql6WlckvaXyIhUdlXbWNNAIGXgFiZwNoypU7QTLtuAnZ0ufsR8LtFOEZedJ4bG6wD5uXmal7qiazZ/KaLXPY2EF1V8V8WY9rNtBEH24FH8vtLtUwN5Vepa8fFc0Qx9kvrFOOjt5+DXHsLjVf6DxvM5gm8zLdCyWJqY6pszzCdl9ymOkJrN/QoyY5Z4oxWwn8wWi+kYkDtDAyvjj8/jWrReleKFDg2P Luke Wakefield"
+
+
+  - name: create mgoodwin account 
+    user:
+      name=mgoodwin
+      comment="Mark Goodwin"
+      uid=2018
+      groups=adm,wheel
+      password="$6$eoVIkAIO$9YhUJn8Q9IluzIJgQZTAvnaTzQO9f8SBWS3hESTuK9Yu2QrdV7pT15b4R3l4qSl.EWnmPEUksNmBCDTnbeIGd0"
+  - name: create mgoodwin key file
+    authorized_key:
+      user=mgoodwin
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCuzE41poXFpyvfWYLS0eVdfkaoIv9SsucPTPjpczcv7OEYeix8hItD4jiZs2kmAQvHpgE14cB/VCTTwvfE/iwQHE3kmMKUgEbzKqpHF2RZgylkr3Y5oZ4loz6EsgeTF/D5zaysETOXVeMb3If8tEFzD7WkcHkQf5R+X/oqvhIbP3dMZ1RgAYBUhnz/fBh9M8OpFxKWlm5dHT82mxWWsKagJaGLeNDlFeH6V+Jn2K7uUYDmqWIenJo1nEk2cxkj0G/guf1Sht/t39xSfkqCKQvUPHTttyjaOdUsnoPjop5sEnborQ9KePtC2TDiClKTB0uVMouF7x6RpMwWCyr7jKUP Mark Goodwin"
+
+
+  - name: create mjoseph account 
+    user:
+      name=mjoseph
+      comment="Manesh Joseph"
+      uid=3012
+      groups=adm,wheel
+      password="$6$RsnEvI9cUb3u5Of$BItKXmzM.U62/pXMOiiqpC6ZN0/dEZiY.zUuggq50.D9Fsxpn0BK6ztjhPj3/UkobyLvBBCji0cz.fqmBObY00"
+  - name: create mjoseph key file
+    authorized_key:
+      user=mjoseph
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnXzerBKSkpd5bchB1gdQIUFKPGGMrwfIKkJ/8+pWmsKr1Ylk59E1hO2eKbYKGIEXDLv8MQPilpN4I0WOnwkjiZRvI53xMnYWevRuk2LMJRpS053oLKTkeXelr9pb7P4NApc9UJkon3u0Li9cFjhpx0GrS2GG85e/DCDg/Yv8qBaP0Y99QQU/IweXPpOz7IeIuS7w+iRu/1h6A/LRNpm8uvaOldJQPxCi52yG4x38BERpcSPVF9bTrZK0ASS1LRDzjFL3YfHOPc6jGHlONadE8w/js5gOnqu7JVsKj9i0uU/Kkkm/g1K9CF5Q5oi8nJbUIdDHhUrCnO26s6MiSpE8D Manesh Joseph"
+
+
+  - name: create rdesilva account 
+    user:
+      name=rdesilva
+      comment="rdesilva"
+      uid=2012
+      groups=adm,wheel
+      password="$6$FeAhXSih0$Y95sM59bsHIcZFCMGQ9gp0tXSYtwPg3CEvd/IYfCXbb4/gIZTBUSA3Ah9lbOCJUUn4L.NQQ9..KtFJgtk8HtU1"
+  - name: create rdesilva key file
+    authorized_key:
+      user=rdesilva
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDi7YWh0S/9KQboneWjZPLK/KGdagsuYfVzQjfVwgnuPoZl0TYOuYFh5ij4iEPfRsOTPZoC5YYvhbPzm04iiFfF26rHaGgD73dAJiFwFY4V4Z3JrUqznMi6c6OZYv5AsqbWTfK3bfglWwNQIGmb7wlG/2oWs8T/eQVsNOwMzKkFeiICtj9ZLRgqq9uOARU6WEfY4Dtdu6sxaqm/M2BtGtRkGrEB2Y0jujY385xxLXI8ZWeaVlfj3cY8TC+NdAsBUAX8blBrO4SwLwTbFfb08o5DTqrsM8/bmA4vEJCZwVhdyTc8y6L/46LNFMzAVzKdz/XnUOSyfYVKNVTzMo6/7lDn rdesilva"
+
+  - name: create rjain account 
+    user:
+      name=rjain
+      comment="Rohit Jain"
+      uid=2005
+      groups=adm,wheel
+      password="$6$FeAhXSih0$Y95sM59bsHIcZFCMGQ9gp0tXSYtwPg3CEvd/IYfCXbb4/gIZTBUSA3Ah9lbOCJUUn4L.NQQ9..KtFJgtk8HtU1"
+  - name: create rjain key file
+    authorized_key:
+      user=rjain
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzby2WpniAfPifFD0RrSPpVCgKgPAqNrqBJEfgLeMMhFhKHmjoyG1E+EEVM13Bfohpz7wV7cIXkhhem3fcK6hgLv6pVrcfF8zEpino3bC/Uu2DfrPDsheccnYe/7KdMp86+eWyvkx8f0eJpiZeXKwog8gROmk78iVXfICAQoJagqotVWlt1kSqvTTxDEI1NxzzMqWYXBFd6BpKLkz0F/0rb7r3877uYMgtEq9vn8PY5RL3riPBSGY4mYkV34dLGNDllotd1i1q36T73cQGxcoMCypEWLub06LTEugeNUouvsvIO1DNvdSErvbyExcwf+QJ2rbtTQjYf0IHbjw/mSq3Q== Rohit Jain"
+
+  - name: create rtruscott account 
+    user:
+      name=rtruscott
+      comment="Rohan Truscott"
+      uid=2020
+      groups=adm,wheel
+      password="$6$lSSdatxMsD9$BjJLTbDwMty.O..vMC2o0Au1oIqqKcOhCnIkrAuCx.c5dV0UmfiWvVNlrpsBUhqhmGh0GYhjiFiH1Nri.c68k/"
+  - name: create rtruscott key file
+    authorized_key:
+      user=rtruscott
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD4bFDM0/BNLvlSC6nOnvvvJbWQeW7H0rO6wGUaNxeITH4smVQuFsIycC/H1X182WoUvMhF+cG/Z87aeDv1qnVfuOG82sBvYNtVYsMKnJji0mHs3ArzF89ukv3+pPtDzwCA5XnEb5/62dHA5pwwOWh300A0QmMbJ5U1QhT7iwqtipqVepjEagGjwEynbQ/dDWtAGl+7OMfXeHWkMsalZ9C+t8CMQ4TvpGDmlFniyOjWXYyy+MyChqD1a8o3zzN5LteV6+IZ/ekFVKjoeEpmQUS/Cjmtoj1VWTBpK5lShWAPXNXLsdRzQuMMCWi4fHd+mpldgIhm5zGxVRFF0o/O0BlH Rohan Truscott"
+
+  - name: create saguilar account 
+    user:
+      name=saguilar
+      comment="Stephen Aguilar"
+      uid=3024
+      groups=adm,wheel
+      password="$6$zXNBQR8GUolpJY$0tzQr0sa6gsU/p8udNy5.Sb7g5ypMAErocsnyadTAbxEh2fyiG2zQ7xvLoHqB1DAja07jr8hdR5VU4UvBPN32."
+  - name: create saguilar key file
+    authorized_key:
+      user=saguilar
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDj64yQStXomTu47GgQoCZON61ECuVTUodPwt1LhfL4DMwKUhx/p60DqFFv1XeYBteEyqT3o7VGrDufx+wrtCJE6GXqPjj69lmMneXPfwoKHS7syEvhcFpOlbWJayN+ixnz/c8zr2CRuXsjNnx8icrhtGNKjBIDPAjQY2f3aMw5xWskojT2ereh077l5i7SjJKmXax0+s5aL9zTeFOOX0hEvi/tBoDWkiCKNqnrvSDd6pu459G+iR3agYUIPvbCUkHeb4RDtCn4iDEzrcr8dThvKIQRxiXfG2DUd0IMRVogAO46gSnntM8OPXzcITBxVnoEktMsBnjJfVobKZL+BA03 Stephen Aguilar"
+
+  - name: create sgautam account 
+    user:
+      name=sgautam
+      comment="Suman Gautam"
+      uid=2003
+      groups=adm,wheel
+      password="$6$zXNBQR8GUolpJY$0tzQr0sa6gsU/p8udNy5.Sb7g5ypMAErocsnyadTAbxEh2fyiG2zQ7xvLoHqB1DAja07jr8hdR5VU4UvBPN32."
+  - name: create sgautam key file
+    authorized_key:
+      user=sgautam
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDkWc/ZsewcS9A4KP8gdq9CHvaxUgKFcWlZhacT5HAs7oks5GLM7Qrel5crlncsUH9MYOkuRqlqH+FRiw/KZ6YP5J4ixCEMp1q3N/3mfelpd7wWnECkZeCjmaFqQbgYLz/arnG7yzV9YlrZJT+5Fzc7l+FEYfuTeVbzEyLauNe0WFGLdKUl+ka7YD+P4WWZ2WQ6J0dWx5S8iF/CWmOP/GUVZDwf1boWXkDt2rOUb2EDSFySA/WU+3GatCwC1BzrA2c6eLVcZ0S7eXen+VMsZO0EjbYyRvuj1kxpNmS4x+qSzsjFppKmLyYAkjPxK1Eri5LE/MsA2nMJ4JxWFNvQB647 Suman Gautam"
+
+
+  - name: create sjey account 
+    user:
+      name=sjey
+      comment="Jeyakumar Soundararaj"
+      uid=3060
+      groups=adm,wheel
+      password="$6$JQkqlUqD$KzsSKVnhKFJGrXP0/FGb9WdBkGPNMulVRBRIjt2WPje1L92QLr9n97tpH4b55twLrB9T8CVedaUc/GdXQNbMZ."
+  - name: create sjey key file
+    authorized_key:
+      user=sjey
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYkju+aC07bbbf1V2oIh++OzZQNcS0PrRef9tDJMSyEged8jo2WvYYHbXjKrMLuEaiM8RJz0Xpk7CA6+829TU4k+drd3lEtEajp/ObzKid7IE+c2Dc+Axfu0R+NUBKgiTHjH+437eu1+hqbzuhggEMgU6EfQUkwIrcUbAobne/89AXQFB+gvo+Tp7kHLjkw+2qg8pzD+zlKfsLATSX7qy8jzTnZrvCcNba2oJUcTiy8t2cH5PDx4QzyRWxWsrwqQ+Hk7FS0FAgq1ZsT0vTA5/yXNnA9/hW2JrHAnDPAXtSOMlrT7tDdfnk+om4fsGcp+x4TVvfuTrP1FZGjXM5/cyJ Jeyakumar Soundararaj"
+
+
+  - name: create sshenoy account 
+    user:
+      name=sshenoy
+      comment="Suchet Shenoy"
+      uid=3040
+      groups=adm,wheel
+      password="$6$gXJN.ON1$GD5ZMmbOQxf6fOG3M7KFCUEwyD/o7Vlk/IF8T8s6EPswn6epojyw60NjpEC4QhF7uCoPmGVq94ybardkFYaIu/"
+  - name: create sshenoy key file
+    authorized_key:
+      user=sshenoy
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0Dvr0eiWD6gUyfxhejyNXFaDTOtQyTvO5RtJlfGjhaqxmtdKkGIeYIp0yADDW7gvEiq7QkNf/LC/jGl00HEx2jc1jbnJiSpSnGfwvI3G8pzojouc6GGfKPj10ksA6Rl0rNT4bCrslnIgCdQZcPUs7S4lkQbZTHpEVlUNRqSFlsvG+bGhdT6tz+8wA9DwOc9akEDwtEL1iFsjTjJ9iPKajavT7r2sA9SjZUXRr758SCowYone0wgRpky9oJ8bHC92OaHc580P9ao9PXZRToIf8xRL0OcibNDxkOIjW4Qmw+UUuA0UtpJddsK4aerRy3Z5o3CIuYiS32hEEyXuc3PA1 Suchet Shenoy"
+
+  - name: create ssultan account 
+    user:
+      name=ssultan
+      comment="ssultan"
+      uid=3035
+      groups=
+      password="$6$YDwwSrE/$g3xzbnMhR7ZRmPM1e6Wcg5o3yqXjXXfIbgSLTQWvfSPxAMsx/ZL0lPF2Qpr2Pr/Xu3Ys7Ov240fPKTVRczpRG0"
+  - name: create ssultan key file
+    authorized_key:
+      user=ssultan
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDH4g81UZvfJNnh0OToZs5JDrcj5Oks0kldJ2VXxrfypPCG/m4iZ7jdy2tnqsYcNnCwYvZZyHzTR+UiHZWI5GxuTavHg8xtDnxdRG/c6Nw0l8mESrYuJ0KH/+SgGpeOdqLBZzprwoVJ2dmDM27/3/vaf+DZ79G+Sfup1sB1oC15jOH+zINriuZaZTM3xdZRc/kH26eGiNuX7U32OP16L/IEriKKguQIuyVyikRxoNaGBdEmeyuXWJPoR+NmzLMz9NhC4txgn7BtdIbPsfamUPq0Cqvs93zhIJl853JR3o44zlJ0yFViRuJEdCU+cmFE9FVBIm5rN5SmKxD9essGXsGn ssultan"
+
+
+  - name: create svajramanickam account 
+    user:
+      name=svajramanickam
+      comment="sumithra vajramanickam"
+      uid=3013
+      groups=adm,wheel
+      password="$6$D4GGCHQProhRtKq$vZxaGakAsK4giuXqKwCV0Y.r4pSQlHty4vFQ5piDaCrjJpd9YnYszqX/V7qloLmL8BWG7BRivgRAFt/bgCdnn0"
+  - name: create svajramanickam key file
+    authorized_key:
+      user=svajramanickam
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCbByf5rcxnllqsKWlRW5f5wrCUtVWoOaGZlU2zekJVbH63Fg4P2sak1lcktGul4zkYdJ8kOPuuIT3S4/WjGbc+a217Zmg5fyA0zU6ixNDT6KdMa5dkU7JqrCB2TNfDtkxTCqLtZXGAfTLA0vtIZEG30YccKnpuUvpdPDdUM+7rB7hGvj8bOvZG0vqpB9P5f5r8/tdEs5nYGtYRlQ6AcPlLw9A8qZIoYq38IkKQIr3/j/hN+fbFPHQ80Ox2paI4dJWwDF4QYkWPaHgMSW+CvPXdU3eD43k6T3q9nfekw7a3lXfMEMRKExpryin8DphulENC18BsYnKCAbm/q6Lb/hHb sumithra vajramanickam"
+
+  - name: create zwael account 
+    user:
+      name=zwael
+      comment="Zin Wael"
+      uid=3050
+      groups=adm,wheel
+      password="$6$a9qaLje6$koPXCTPk8nFqQoh0GWO3zPrUoIA6epgXsPL2xBRjwBrWO/sL.4MS8gzL8xoMltP2.H7DMBEo5SNvbZM9frE1/"
+  - name: create zwael key file
+    authorized_key:
+      user=zwael
+      key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCv6e8p1qzT8slQD2pshfYzdFKqPM+ZdJIXavbHI7iV29cCsEVXxo6BfRdsky/yf9oj7ovTlkrze+cv44xg63AhbLkK4UvqwRZjajrMbPQ0DMIV7OQG+d6EtFnIVz7b/OsDDhpm+oGGxBVmsm+c6TVnFBekA3SybCrvToBxu8SkypS3M9q0JyC+2ovef/bQVSpFl9BOqJqFJqqU16AJPgJ8EUSGpfx4Xgip1KB7S3BOgihKTs/zp+sShW8nD30fd0vn+V2eGZywFLx9EK0xA38jhOUVfa4zKENdBS2VdlKXa880q/XaxEsHwcv9jHAZXVrJ5pTw1Dkss723CD0zLUB/ Zin Wael"
+      # Removed Users - move users above to below and set state=absent, comment out key file, group & password section
+
+  - name: remove dmuntean account 
+    user:
+      name=dmuntean
+      comment="dmuntean"
+      uid=3001
+      state=absent
+
